@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+    <script src="https://pixijs.download/release/pixi.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Lucky Pirate</h1>
+Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests filled with <b id="gold">gold</b> but avoid the <b id="skulls">skulls</b> or loose your fortune!
+<br>
+
+<div>
+    <h2>Rules</h2>
+    Tap the start button to begin and enter a wager. Gold pieces will be hidden amoungst the treasure chests, the total value of which will always be double your origional wager.
+    Tap a chest to open it winning the gold inside. However two skulls are hidden amoungst the gold, if you tap a skull you loose the game and all the money you won.
+    You can stop playing at any time using the X button.
+</div>
+
+<script type="module">
+    //import{Sprite,Assets} from 'pixi.js';
+    // Create the application helper and add its render target to the page
+    const app = new PIXI.Application();
+    await app.init({ width: 640, height: 360 })
+    document.body.appendChild(app.canvas);
+
+    await Pixi.Assets.load("images/tempBackground.jpg");//upklyak on Freepik
+    let background = Pixi.Sprite.from("images/tempBackground.jpg");
+    app.stage.addChild(background);
+
+    background.x = 1000000;
+
+    // Create the sprite and add it to the stage
+    // load the PNG asynchronously
+    await PIXI.Assets.load("images/sample-747abf529b135a1f549dff3ec846afbc.png");
+    let sprite = PIXI.Sprite.from("images/sample-747abf529b135a1f549dff3ec846afbc.png");
+    app.stage.addChild(sprite);
+
+    // Add a ticker callback to move the sprite back and forth
+    let elapsed = 0.0;
+    app.ticker.add((ticker) => {
+        elapsed += ticker.deltaTime;
+        sprite.x = 100.0 + Math.cos(elapsed/50.0) * 100.0;
+    });
+
+</script>
+</body>
+</html>

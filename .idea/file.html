@@ -16,11 +16,14 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     You can stop playing at any time using the X button.
 </div>
 
+<br>
 <script type="module">
     //import{Sprite,Assets} from 'pixi.js';
     // Create the application helper and add its render target to the page
     const app = new PIXI.Application();
     const decorations = [];
+    const waves = [];
+    const chests = [9];
     let elapsed = 0.0;
 
     async function setup(){
@@ -49,6 +52,67 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         decorations.push(sprite);
     }
 
+    export function addWaves(){
+        let waveCount = 640 / 40;
+        for (let i = 0; i < waveCount; i++) {
+            let wave = PIXI.Sprite.from("images/crab.png");
+            app.stage.addChild(wave);
+            wave.x = i*50;
+            wave.anchor.x = 0.5;
+            waves.push(wave);
+        }
+    }
+
+    export function distributeTreasure(wager){
+        let treasures = [];
+        let remainingWager = wager*2;
+        for (let i = 0; i < 6; i++) {
+            let treasure = Math.random()*(remainingWager-((7-i) * 10)) + 10;
+            remainingWager -= treasure;
+            treasures.push(treasure);
+        }
+        treasures.push(remainingWager);
+        treasures.push(0);
+        treasures.push(0);
+        return treasures;
+    }
+
+    export function setChestPositions(){
+
+        let yCoordinates = [];
+    }
+
+    export function setupChests(wager){
+        let treasures = distributeTreasure(wager);
+        let w = 640/7.0;
+        let h = 360/7.0;
+        let coordinates = [w,w*3,w*5,h,h*3,h*5];
+        for (let i = 0; i < 9; i++) {
+            let chest = PIXI.Sprite.from("images/crab.png");
+            chest.xLocation = coordinates[i%3];
+            chest.yLocation = coordinates[Math.floor(i/3)+3];
+
+            let j = (Math.floor(Math.random() * treasure.length)) - 1;
+            chest.treasure = treasures[j];
+            treasures.remove(j);
+        }
+    }
+
+    const movingChests = false;
+    export function positionChests(time){
+        for (let i = 0; i < chests; i++) {
+            chest.x += chestVectorX;
+            chest.y += chestVectorY;
+        }
+    }
+    export function animateWaves(time){
+        let delta = time.deltaTime;
+        for (let i = 0; i < waves.length; i++) {
+            waves[i].x = (elapsed/5 + 50*i) % 640;
+            waves[i].y = 200.0 + Math.cos(elapsed/50.0 + i) * 20.0;
+        }
+    }
+
     export function animate(time,sprite){
         let delta = time.deltaTime;
         elapsed += delta;
@@ -68,10 +132,15 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         await preload();
         addBackground();
         addDecorations();
+        //addWaves();
 
         app.ticker.add((time) =>
         {
             animate(time,decorations[0]);
+            animateWaves(time);
+            if(movingChests){
+                positionChests(time);
+            }
         });
     })();
 

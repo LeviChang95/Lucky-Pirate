@@ -20,26 +20,60 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     //import{Sprite,Assets} from 'pixi.js';
     // Create the application helper and add its render target to the page
     const app = new PIXI.Application();
-    await app.init({ width: 640, height: 360 })
-    document.body.appendChild(app.canvas);//upklyak on Freepik
-
-    await PIXI.Assets.load("images/tempBackground.jpg");
-    let background = PIXI.Sprite.from("images/tempBackground.jpg");
-    background.width = 640;
-    background.height = 360;
-    app.stage.addChild(background);
-
-    await PIXI.Assets.load("images/sample-747abf529b135a1f549dff3ec846afbc.png");
-    let sprite = PIXI.Sprite.from("images/sample-747abf529b135a1f549dff3ec846afbc.png");
-    app.stage.addChild(sprite);
-
-    // Add a ticker callback to move the sprite back and forth
+    const decorations = [];
     let elapsed = 0.0;
-    app.ticker.add((ticker) => {
-        elapsed += ticker.deltaTime;
-        sprite.x = 100.0 + Math.cos(elapsed/50.0) * 100.0;
-    });
 
+    async function setup(){
+        await app.init({ width: 640, height: 360 })
+        document.body.appendChild(app.canvas);
+    }
+
+    async function preload(){
+        await PIXI.Assets.load("images/tempBackground.jpg"); //upklyak on Freepik
+        await PIXI.Assets.load("images/crab.png")
+    }
+
+    export function addBackground(){
+        let background = PIXI.Sprite.from("images/tempBackground.jpg");
+        background.width = 640;
+        background.height = 360;
+        app.stage.addChild(background);
+    }
+
+    export function addDecorations(){
+        let sprite = PIXI.Sprite.from("images/crab.png");
+        app.stage.addChild(sprite);
+        sprite.variableScale = 0.25;
+        sprite.y = 300;
+        sprite.scale.y = sprite.variableScale;
+        decorations.push(sprite);
+    }
+
+    export function animate(time,sprite){
+        let delta = time.deltaTime;
+        elapsed += delta;
+        sprite.x = 200.0 + Math.cos(elapsed/50.0) * 100.0
+        sprite.anchor.x = 0.5;
+        if(((elapsed/50.0)%(2*Math.PI))<Math.PI)
+             sprite.scale.x = sprite.variableScale;
+         else
+             sprite.scale.x = -sprite.variableScale;
+    }
+
+
+
+    (async () =>
+    {
+        await setup();
+        await preload();
+        addBackground();
+        addDecorations();
+
+        app.ticker.add((time) =>
+        {
+            animate(time,decorations[0]);
+        });
+    })();
 
 </script>
 </body>

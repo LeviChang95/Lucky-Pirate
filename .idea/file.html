@@ -21,16 +21,14 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     // Create the application helper and add its render target to the page
     const app = new PIXI.Application();
     await app.init({ width: 640, height: 360 })
-    document.body.appendChild(app.canvas);
+    document.body.appendChild(app.canvas);//upklyak on Freepik
 
-    await Pixi.Assets.load("images/tempBackground.jpg");//upklyak on Freepik
-    let background = Pixi.Sprite.from("images/tempBackground.jpg");
+    await PIXI.Assets.load("images/tempBackground.jpg");
+    let background = PIXI.Sprite.from("images/tempBackground.jpg");
+    background.width = 640;
+    background.height = 360;
     app.stage.addChild(background);
 
-    background.x = 1000000;
-
-    // Create the sprite and add it to the stage
-    // load the PNG asynchronously
     await PIXI.Assets.load("images/sample-747abf529b135a1f549dff3ec846afbc.png");
     let sprite = PIXI.Sprite.from("images/sample-747abf529b135a1f549dff3ec846afbc.png");
     app.stage.addChild(sprite);
@@ -41,6 +39,7 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         elapsed += ticker.deltaTime;
         sprite.x = 100.0 + Math.cos(elapsed/50.0) * 100.0;
     });
+
 
 </script>
 </body>

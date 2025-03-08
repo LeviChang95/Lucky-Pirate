@@ -12,50 +12,70 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
 <div>
     <h2>Rules</h2>
     Tap the start button to begin and enter a wager. Gold pieces will be hidden amoungst the treasure chests, the total value of which will always be double your origional wager.
-    Tap a chest to open it winning the gold inside. However two skulls are hidden amoungst the gold, if you tap a skull you loose the game and all the money you won.
+    Tap a chest to open it winning the gold inside. However two skulls are hidden amoungst the gold, if you tap a skull you lose the game and all the money you won.
     You can stop playing at any time using the X button.
 </div>
 
 <br>
+
 <script type="module">
-    //import{Sprite,Assets} from 'pixi.js';
-    // Create the application helper and add its render target to the page
+
+    //----------------------------------------------BASIC SETUP---------------------------------------------------------------
+
     const app = new PIXI.Application();
-    const decorations = [];
+    const w = 690;
+    const h = 550;
+    let crab = null;
+    let pirateShip = null;
     const waves = [];
     const chests = [9];
     let elapsed = 0.0;
 
     async function setup(){
-        await app.init({ width: 640, height: 360 })
+        await app.init({background:'#FFFFFF', width: w, height: h})
         document.body.appendChild(app.canvas);
     }
 
     async function preload(){
-        await PIXI.Assets.load("images/tempBackground.jpg"); //upklyak on Freepik
-        await PIXI.Assets.load("images/crab.png")
+        await PIXI.Assets.load("images/beach.png");
+        await PIXI.Assets.load("images/crab.png"); //on Freepik
+        const waves = [
+            { alias: 'wave0', src: "images/wave0.png" },
+            { alias: 'wave1', src: "images/wave1.png" },
+            { alias: 'wave2', src: "images/wave2.png" },
+            { alias: 'wave3', src: "images/wave3.png" },
+        ];
+        await PIXI.Assets.load(waves);
+        await PIXI.Assets.load("images/chestClosed.png");
+        await PIXI.Assets.load("images/chestOpen.png");
+        await PIXI.Assets.load("images/pirateShip.png");
     }
 
-    export function addBackground(){
-        let background = PIXI.Sprite.from("images/tempBackground.jpg");
-        background.width = 640;
-        background.height = 360;
-        app.stage.addChild(background);
+//-------------------------------------------------ADDING IMAGES----------------------------------------------------------
+
+    export function addBeach(){
+        let beach = PIXI.Sprite.from("images/beach.png");
+        beach.width = w;
+        beach.height = h;
+        app.stage.addChild(beach);
     }
 
-    export function addDecorations(){
-        let sprite = PIXI.Sprite.from("images/crab.png");
-        app.stage.addChild(sprite);
-        sprite.variableScale = 0.25;
-        sprite.y = 300;
-        sprite.scale.y = sprite.variableScale;
-        decorations.push(sprite);
+    export function addCrab(){
+        crab = PIXI.Sprite.from("images/crab.png");
+        app.stage.addChild(crab);
+        crab.variableScale = 0.2;
+        crab.y = 490;
+        crab.scale.y = crab.variableScale;
     }
+
 
     export function addWaves(){
-        let waveCount = 640 / 40;
+        let waveCount = w / 40;
+        const waveAssets = ['wave0','wave1','wave2','wave3'];
         for (let i = 0; i < waveCount; i++) {
-            let wave = PIXI.Sprite.from("images/crab.png");
+            let wave = PIXI.Sprite.from(waveAssets[Math.floor(Math.random()*4)]);
+            wave.scale.x = 0.5;
+            wave.scale.y = 0.5;
             app.stage.addChild(wave);
             wave.x = i*50;
             wave.anchor.x = 0.5;
@@ -63,30 +83,48 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         }
     }
 
+    export function addPirateShip(){
+        pirateShip = PIXI.Sprite.from("images/pirateShip.png");
+        pirateShip.interactive = true;
+        pirateShip.buttonMode = true;
+        pirateShip.anchor.set(0.5);
+        pirateShip.x = w/2;
+        pirateShip.y = 260;
+        pirateShip.scale.x = 0.3;
+        pirateShip.scale.y = 0.3;
+        app.stage.addChild(pirateShip);
+        pirateShip.on('pointerdown',() => {
+           console.log("hello world");
+        });
+    }
+
+    //-----------------------------------------------CHESTS----------------------------------------------------------
+
+
     export function distributeTreasure(wager){
         let treasures = [];
-        let remainingWager = wager*2;
-        for (let i = 0; i < 6; i++) {
-            let treasure = Math.random()*(remainingWager-((7-i) * 10)) + 10;
-            remainingWager -= treasure;
-            treasures.push(treasure);
-        }
-        treasures.push(remainingWager);
-        treasures.push(0);
-        treasures.push(0);
+        // let remainingWager = wager*2;
+        // for (let i = 0; i < 6; i++) {
+        //     let treasure = Math.random()*(remainingWager-((7-i) * 10)) + 10;
+        //     remainingWager -= treasure;
+        //     treasures.push(treasure);
+        // }
+        // treasures.push(remainingWager);
+        // treasures.push(0);
+        // treasures.push(0);
+        treasure = [0,0,0.5*wager,0.25*wager,0.25*wager,0.75*wager,0.05*wager,0.1*wager,0.1*wager];
         return treasures;
     }
 
     export function setChestPositions(){
-
         let yCoordinates = [];
     }
 
     export function setupChests(wager){
         let treasures = distributeTreasure(wager);
-        let w = 640/7.0;
-        let h = 360/7.0;
-        let coordinates = [w,w*3,w*5,h,h*3,h*5];
+        let width = w/7.0;
+        let height = h/7.0;
+        let coordinates = [width,width*3,width*5,height,height*3,height*5];
         for (let i = 0; i < 9; i++) {
             let chest = PIXI.Sprite.from("images/crab.png");
             chest.xLocation = coordinates[i%3];
@@ -105,23 +143,36 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
             chest.y += chestVectorY;
         }
     }
+
+
+    //-------------------------------------------------ANIMATIONS------------------------------------------------------------------
+
+
     export function animateWaves(time){
         let delta = time.deltaTime;
         for (let i = 0; i < waves.length; i++) {
-            waves[i].x = (elapsed/5 + 50*i) % 640;
-            waves[i].y = 200.0 + Math.cos(elapsed/50.0 + i) * 20.0;
+            waves[i].x = (elapsed/5 + 50*i) % w;
+            waves[i].y = 370.0 + Math.cos(elapsed/50.0 + i) * 20.0;
         }
     }
 
-    export function animate(time,sprite){
+    export function animatePirateShip(time){
         let delta = time.deltaTime;
         elapsed += delta;
-        sprite.x = 200.0 + Math.cos(elapsed/50.0) * 100.0
-        sprite.anchor.x = 0.5;
+        pirateShip.y = 260.0 + Math.cos(elapsed/100.0) * 10.0;
+        pirateShip.rotation += Math.cos(elapsed/100.0) * 0.001;
+        pirateShip.x += Math.cos(elapsed/100.0) * 0.1;
+    }
+
+    export function animateCrab(time){
+        let delta = time.deltaTime;
+        elapsed += delta;
+        crab.x = 175.0 + Math.cos(elapsed/50.0) * 100.0
+        crab.anchor.x = 0.5;
         if(((elapsed/50.0)%(2*Math.PI))<Math.PI)
-             sprite.scale.x = sprite.variableScale;
+            crab.scale.x = crab.variableScale;
          else
-             sprite.scale.x = -sprite.variableScale;
+            crab.scale.x = -crab.variableScale;
     }
 
 
@@ -130,14 +181,16 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     {
         await setup();
         await preload();
-        addBackground();
-        addDecorations();
-        //addWaves();
+        addWaves();
+        addBeach();
+        addCrab();
+        addPirateShip();
 
         app.ticker.add((time) =>
         {
-            animate(time,decorations[0]);
+            animateCrab(time);
             animateWaves(time);
+            animatePirateShip(time);
             if(movingChests){
                 positionChests(time);
             }

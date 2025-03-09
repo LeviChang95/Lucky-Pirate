@@ -22,14 +22,24 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
 
     //----------------------------------------------BASIC SETUP---------------------------------------------------------------
 
+    //import {Text} from "node_modules/pixi.js";
+
     const app = new PIXI.Application();
     const w = 690;
     const h = 550;
+
     let crab = null;
     let pirateShip = null;
+    let xButton = null;
+
+    let totalMoneyText = null;
     const waves = [];
-    const chests = [9];
+    const chests = [];
+    let openChests = 0;
     let elapsed = 0.0;
+
+    let totalMoneyCount = 300;
+    let gameMoney = 0;
 
     async function setup(){
         await app.init({background:'#FFFFFF', width: w, height: h})
@@ -49,6 +59,8 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         await PIXI.Assets.load("images/chestClosed.png");
         await PIXI.Assets.load("images/chestOpen.png");
         await PIXI.Assets.load("images/pirateShip.png");
+        await PIXI.Assets.load("images/xButton.png");
+
     }
 
 //-------------------------------------------------ADDING IMAGES----------------------------------------------------------
@@ -68,7 +80,6 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         crab.scale.y = crab.variableScale;
     }
 
-
     export function addWaves(){
         let waveCount = w / 40;
         const waveAssets = ['wave0','wave1','wave2','wave3'];
@@ -83,6 +94,17 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         }
     }
 
+    export function simple(){
+        console.log("simple");
+    }
+
+    export function addTotalMoneyText(){
+        totalMoneyText = new PIXI.Text("Total Money: " + totalMoneyCount,{fontFamily : 'Georgia', fontSize: 24, fill : 0xff1010, align : 'right'});
+        totalMoneyText.x = 450;
+        totalMoneyText.y = 20;
+        app.stage.addChild(totalMoneyText);
+    }
+
     export function addPirateShip(){
         pirateShip = PIXI.Sprite.from("images/pirateShip.png");
         pirateShip.interactive = true;
@@ -93,16 +115,27 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         pirateShip.scale.x = 0.3;
         pirateShip.scale.y = 0.3;
         app.stage.addChild(pirateShip);
-        pirateShip.on('pointerdown',() => {
-           console.log("hello world");
-        });
+        pirateShip.on('pointerdown',event => startGame(200));
     }
 
-    //-----------------------------------------------CHESTS----------------------------------------------------------
+    export function addXButton(){
+        xButton = PIXI.Sprite.from("images/xButton.png");
+        xButton.interactive = true;
+        xButton.buttonMode = true;
+        xButton.anchor.set(0.5);
+        xButton.x = 640;
+        xButton.y = 500;
+        xButton.scale.x = 0.03;
+        xButton.scale.y = 0.03;
+        app.stage.addChild(xButton);
+        xButton.on('pointerdown',event => endGame());
+    }
+
+    //-----------------------------------------------GAME----------------------------------------------------------
 
 
     export function distributeTreasure(wager){
-        let treasures = [];
+        return [0,0,0.5*wager,0.25*wager,0.25*wager,0.75*wager,0.05*wager,0.1*wager,0.1*wager];
         // let remainingWager = wager*2;
         // for (let i = 0; i < 6; i++) {
         //     let treasure = Math.random()*(remainingWager-((7-i) * 10)) + 10;
@@ -112,28 +145,97 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         // treasures.push(remainingWager);
         // treasures.push(0);
         // treasures.push(0);
-        treasure = [0,0,0.5*wager,0.25*wager,0.25*wager,0.75*wager,0.05*wager,0.1*wager,0.1*wager];
-        return treasures;
     }
 
-    export function setChestPositions(){
-        let yCoordinates = [];
+    export function showTreasure(chest){
+        if(chest.treasure == 0){
+            console.log("Show Skull");
+        }else{
+            let text = new PIXI.Text(chest.treasure,{fontFamily : 'Georgia', fontSize: 24, fill : 0xff1010, align : 'right'});
+            text.x = chest.x - 10;
+            text.y = chest.y;
+            app.stage.addChild(text);
+        }
     }
 
-    export function setupChests(wager){
+    export function openChest(chestContainer,chest){
+        openChests ++;
+        chestContainer.removeChild(chest);
+        openChest =
+        chestContainer.addChild();
+        showTreasure(chest);
+
+        if(chest.treasure == 0){
+            gameMoney = 0;
+            endGame();
+            return;
+        }
+
+        gameMoney += chest.treasure;
+
+        if(openChests == 7){
+            console.log("You Win")
+            endGame();
+        }
+    }
+
+    export function endGame(){
+        totalMoneyCount += gameMoney;
+        totalMoneyText.text = totalMoneyCount;
+        gameMoney = 0;
+        openChests = 0;
+
+        for (let i = 0; i < chests.length; i++) {
+            console.log("test " + chests[i].treasure);
+            app.stage.removeChild(chests[i]);
+        }
+
+        app.stage.removeChild(xButton);
+        pirateShip.interactive = true;
+        pirateShip.buttonMode = true;
+    }
+
+
+    export function startGame(wager){
+        if(totalMoneyCount < wager){
+            console.log("Not enough money")
+            return;
+        }
+        totalMoneyCount -= wager;
+        totalMoneyText.text = totalMoneyCount;
+
         let treasures = distributeTreasure(wager);
         let width = w/7.0;
         let height = h/7.0;
         let coordinates = [width,width*3,width*5,height,height*3,height*5];
         for (let i = 0; i < 9; i++) {
-            let chest = PIXI.Sprite.from("images/crab.png");
-            chest.xLocation = coordinates[i%3];
-            chest.yLocation = coordinates[Math.floor(i/3)+3];
+            let chestContainer = new PIXI.Container();
+            let chest = PIXI.Sprite.from("images/chestClosed.png");
 
-            let j = (Math.floor(Math.random() * treasure.length)) - 1;
+            chest.x = coordinates[i%3];
+            chest.y = coordinates[Math.floor(i/3)+3];
+            let j = (Math.floor(Math.random() * treasures.length));
             chest.treasure = treasures[j];
-            treasures.remove(j);
+            treasures.splice(j,1);
+
+            chest.anchor.x = 0.5;
+            chest.anchor.y = 0.5;
+            chest.scale.x = 0.05;
+            chest.scale.y = 0.05;
+
+            chest.interactive = true;
+            chest.buttonMode = true;
+            chest.on('pointerdown',event => openChest(chestContainer));
+
+
+            chestContainer.addChild(chest);
+            chests.push(chestContainer);
+            app.stage.addChild(chestContainer);
+            console.log("here");
         }
+        pirateShip.buttonMode = false;
+        pirateShip.interactive = false;
+        addXButton();
     }
 
     const movingChests = false;
@@ -146,7 +248,6 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
 
 
     //-------------------------------------------------ANIMATIONS------------------------------------------------------------------
-
 
     export function animateWaves(time){
         let delta = time.deltaTime;
@@ -167,14 +268,13 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     export function animateCrab(time){
         let delta = time.deltaTime;
         elapsed += delta;
-        crab.x = 175.0 + Math.cos(elapsed/50.0) * 100.0
+        crab.x = 200.0 + Math.cos(elapsed/100.0) * 125.0
         crab.anchor.x = 0.5;
-        if(((elapsed/50.0)%(2*Math.PI))<Math.PI)
+        if(((elapsed/100.0)%(2*Math.PI))<Math.PI)
             crab.scale.x = crab.variableScale;
          else
             crab.scale.x = -crab.variableScale;
     }
-
 
 
     (async () =>
@@ -185,6 +285,7 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         addBeach();
         addCrab();
         addPirateShip();
+        addTotalMoneyText();
 
         app.ticker.add((time) =>
         {

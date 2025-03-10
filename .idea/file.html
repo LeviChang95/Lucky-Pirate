@@ -6,14 +6,14 @@
 </head>
 <body>
 <h1>Lucky Pirate</h1>
-Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests filled with <b id="gold">gold</b> but avoid the <b id="skulls">skulls</b> or loose your fortune!
+Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests filled with <b id="gold">gold</b> but avoid the <b id="skulls">skulls</b> ( <img src="images/skull.png" style="width:20px;height:20px;"> ) or loose your fortune!
 <br>
 
 <div>
     <h2>Rules</h2>
-    Tap the pirate ship to begin. Gold pieces will be hidden amoungst the treasure chests, the total value of which will always be double your origional wager.
+    Tap the pirate ship and spend 100 gold to begin. Amoungst the treasures chests 250 Gold pieces will be hidden.
     Tap a chest to open it winning the gold inside. However two skulls are hidden amoungst the gold, if you tap a skull you lose the game and all the money you may have won.
-    You can stop playing at any time by tapping the X button.
+    You can stop playing at any time by tapping the X button, keeping any gold you have earned.
 </div>
 
 <br>
@@ -21,18 +21,19 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
 <script type="module">
 
     //----------------------------------------------BASIC SETUP---------------------------------------------------------------
-
-    //import {Text} from "node_modules/pixi.js";
-
     const app = new PIXI.Application();
     const w = 690;
     const h = 550;
+
+    let background = new PIXI.Container();
+    let userInterface = new PIXI.Container();
+    let game = new PIXI.Container();
 
     let crab = null;
     let pirateShip = null;
     let xButton = null;
 
-    let totalMoneyText = null;
+    let totalGoldText = null;
     let endText = null;
     const waves = [];
     const chests = [];
@@ -41,17 +42,21 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     let clock = 0.0;
     let animation = "";
 
-    let totalMoneyCount = 300;
-    let gameMoney = 0;
+    let totalGoldCount = 300;
+    let gameGoldCount = 0;
 
     async function setup(){
         await app.init({background:'#FFFFFF', width: w, height: h})
         document.body.appendChild(app.canvas);
+
+        app.stage.addChild(background);
+        app.stage.addChild(game);
+        app.stage.addChild(userInterface);
     }
 
     async function preload(){
-        await PIXI.Assets.load("images/beach.png");
-        await PIXI.Assets.load("images/crab.png"); //on Freepik
+        await PIXI.Assets.load("images/beach.png"); //https://www.freepik.com/free-vector/tropical-beach-paradise-vector-illustration_146616657.htm#fromView=keyword&page=1&position=0&uuid=171bb22e-b05f-42f0-8b45-a9660fcdd863
+        await PIXI.Assets.load("images/crab.png"); //https://www.freepik.com/free-vector/flat-design-crab-illustration_29725082.htm#fromView=search&page=1&position=47&uuid=507781f6-2c1a-4a3c-90d3-80c793b8113b
         const waves = [
             { alias: 'wave0', src: "images/wave0.png" },
             { alias: 'wave1', src: "images/wave1.png" },
@@ -59,11 +64,11 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
             { alias: 'wave3', src: "images/wave3.png" },
         ];
         await PIXI.Assets.load(waves);
-        await PIXI.Assets.load("images/chestClosed.png");
-        await PIXI.Assets.load("images/chestOpen.png");
-        await PIXI.Assets.load("images/pirateShip.png");
-        await PIXI.Assets.load("images/xButton.png");
-        await PIXI.Assets.load("images/skull.png");
+        await PIXI.Assets.load("images/chestClosed.png"); //https://www.freepik.com/free-vector/wooden-chest-realistic-set-with-images-opened-closed-empty-treasure-coffers-white_7497393.htm#fromView=keyword&page=1&position=2
+        await PIXI.Assets.load("images/chestOpen.png"); //https://www.freepik.com/free-vector/wooden-chest-realistic-set-with-images-opened-closed-empty-treasure-coffers-white_7497393.htm#fromView=keyword&page=1&position=2
+        await PIXI.Assets.load("images/pirateShip.png"); //https://creazilla.com/media/clipart/1723259/pirate-ship
+        await PIXI.Assets.load("images/xButton.png"); //https://pngtree.com/freepng/red-exit-close-for-game_7601586.html
+        await PIXI.Assets.load("images/skull.png"); //https://www.freepik.com/free-vector/crossing-bones-skull-vector-logo_33115348.htm#fromView=keyword&page=1&position=0&uuid=227ebfc4-97b3-4695-aa28-53f874c9fdf1
 
     }
 
@@ -73,12 +78,11 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         let beach = PIXI.Sprite.from("images/beach.png");
         beach.width = w;
         beach.height = h;
-        app.stage.addChild(beach);
+        background.addChild(beach);
     }
 
     export function addCrab(){
         crab = PIXI.Sprite.from("images/crab.png");
-        app.stage.addChild(crab);
         crab.variableScale = 0.2;
         crab.y = 490;
         crab.scale.y = crab.variableScale;
@@ -87,6 +91,7 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         crab.on('pointerdown',()=> {
             console.log("Snip");
         });
+        background.addChild(crab);
     }
 
     export function addWaves(){
@@ -96,18 +101,25 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
             let wave = PIXI.Sprite.from(waveAssets[Math.floor(Math.random()*4)]);
             wave.scale.x = 0.5;
             wave.scale.y = 0.5;
-            app.stage.addChild(wave);
+            background.addChild(wave);
             wave.x = i*50;
             wave.anchor.x = 0.5;
             waves.push(wave);
         }
     }
 
-    export function addTotalMoneyText(){
-        totalMoneyText = new PIXI.Text("Total Money: " + totalMoneyCount,{fontFamily : 'Georgia', fontSize: 24, fill : 0xff1010, align : 'right'});
-        totalMoneyText.x = 450;
-        totalMoneyText.y = 20;
-        app.stage.addChild(totalMoneyText);
+    export function addTotalGoldText(){
+        totalGoldText = new PIXI.Text("Total Gold: " + totalGoldCount,{fontFamily : 'Georgia', fontSize: 24, fill : 0xa98733, align : 'right'});
+        totalGoldText.x = w-200;
+        totalGoldText.y = 25;
+        userInterface.addChild(totalGoldText);
+    }
+
+    export function addTitleText(){
+        let title = new PIXI.Text("Lucky Pirate",{fontFamily : 'Georgia', fontSize: 44, fill : 0xa98733, align : 'right', shadowColor: 0xa91733, shadowOffsetX:3,textShadow:true});
+        title.x = 10;
+        title.y = 10;
+        userInterface.addChild(title);
     }
 
     export function addPirateShip(){
@@ -119,7 +131,7 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         pirateShip.y = 260;
         pirateShip.scale.x = 0.3;
         pirateShip.scale.y = 0.3;
-        app.stage.addChild(pirateShip);
+        background.addChild(pirateShip);
         pirateShip.on('pointerdown',event => startGame(100));
     }
 
@@ -132,96 +144,77 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         xButton.y = 500;
         xButton.scale.x = 0.03;
         xButton.scale.y = 0.03;
-        app.stage.addChild(xButton);
+        game.addChild(xButton);
         xButton.on('pointerdown',event => endGame("Exited"));
     }
 
     export function addChests(wager){
-        let treasures = distributeTreasure(wager);
         let width = w/7.0;
         let height = h/7.0;
-        let coordinates = [width,width*3,width*5,height,height*3,height*5];
+        let modifier = 22.5;
+        let coordinates = [width+modifier*2,width*3+modifier*2,width*5+modifier*2,height+modifier,height*3+modifier,height*5+modifier];
+        let treasures = [0,0,0.05*wager,0.1*wager,0.1*wager,0.25*wager,0.25*wager,0.75*wager,1*wager];
         for (let i = 0; i < 9; i++) {
             let chestContainer = new PIXI.Container();
+            chestContainer.x = coordinates[i%3];
+            chestContainer.y = coordinates[Math.floor(i/3)+3];
             let j = (Math.floor(Math.random() * treasures.length));
             chestContainer.treasure = treasures[j];
+            console.log(treasures[j]);
             treasures.splice(j,1);
 
-
             let chestClosed = PIXI.Sprite.from("images/chestClosed.png");
-
-            chestClosed.x = coordinates[i%3];
-            chestClosed.y = coordinates[Math.floor(i/3)+3];
-            chestClosed.anchor.x = 0.5;
-            chestClosed.anchor.y = 0.5;
-            chestClosed.scale.x = 0.05;
-            chestClosed.scale.y = 0.05;
-
+            chestClosed.anchor = 0.5,0.5;
+            chestClosed.scale = 0.05,0.05;
             chestClosed.interactive = true;
             chestClosed.buttonMode = true;
             chestClosed.on('pointerdown',event => openChest(chestContainer));
-
             chestContainer.closed = chestClosed;
+
+            let chestOpen = PIXI.Sprite.from("images/chestOpen.png");
+            chestOpen.anchor = 0.5,0.5;
+            chestOpen.scale = 0.05,0.05;
+            chestContainer.open = chestOpen;
+
             chestContainer.addChild(chestClosed);
             chests.push(chestContainer);
-            app.stage.addChild(chestContainer);
+            game.addChild(chestContainer);
         }
     }
 
-    //-----------------------------------------------GAME----------------------------------------------------------
+    //-----------------------------------------------GAME LOGIC----------------------------------------------------------
 
     export function startGame(wager){
-        if(totalMoneyCount < wager){
-            console.log("Not enough money")
+        if(totalGoldCount < wager){
+            console.log("Not enough gold to play")
             return;
         }
-        totalMoneyCount -= wager;
-        totalMoneyText.text = "Total Money: " + totalMoneyCount;
+        totalGoldCount -= wager;
+        totalGoldText.text = "Total Gold: " + totalGoldCount;
 
         addChests(wager);
-
-        pirateShip.buttonMode = false;
-        pirateShip.interactive = false;
         addXButton();
+        pirateShip.interactive = false;
+        background.filters = new PIXI.BlurFilter({strength: 4});
     }
-
 
     export function distributeTreasure(wager){
-        return [0,0,0.5*wager,0.25*wager,0.25*wager,0.75*wager,0.05*wager,0.1*wager,0.1*wager];
-        // let remainingWager = wager*2;
-        // for (let i = 0; i < 6; i++) {
-        //     let treasure = Math.random()*(remainingWager-((7-i) * 10)) + 10;
-        //     remainingWager -= treasure;
-        //     treasures.push(treasure);
-        // }
-        // treasures.push(remainingWager);
-        // treasures.push(0);
-        // treasures.push(0);
+        return [0,0,0.05*wager,0.1*wager,0.1*wager,0.25*wager,0.25*wager,0.75*wager,1*wager];
     }
-
-
 
     export function openChest(chestContainer){
         openChests ++;
         chestContainer.removeChild(chestContainer.closed);
-        let chestOpen = PIXI.Sprite.from("images/chestOpen.png");
-        chestOpen.anchor.x = 0.5;
-        chestOpen.anchor.y = 0.5;
-        chestOpen.scale.x = 0.05;
-        chestOpen.scale.y = 0.05;
-        chestOpen.x = chestContainer.closed.x;
-        chestOpen.y = chestContainer.closed.y;
-        chestContainer.open = chestOpen;
-        chestContainer.addChild(chestOpen);
+        chestContainer.addChild(chestContainer.open);
         showTreasure(chestContainer);
 
         if(chestContainer.treasure == 0){
-            gameMoney = 0;
+            gameGoldCount = 0;
             endGame(chestContainer);
             return;
         }
 
-        gameMoney += chestContainer.treasure;
+        gameGoldCount += chestContainer.treasure;
 
         if(openChests == 7){
             endGame("Finished");
@@ -231,36 +224,25 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     export function showTreasure(chestContainer){
         let treasure = null;
         if(chestContainer.treasure == 0){
-            console.log("open chest skull");
             treasure = PIXI.Sprite.from("images/skull.png");
-            treasure.anchor.x = 0.5;
-            treasure.anchor.y = 0.5;
-            treasure.scale.x = 0.025;
-            treasure.scale.y = 0.025;
+            treasure.scale = 0.025,0.025;
         }else{
-            treasure = new PIXI.Text(chestContainer.treasure,{fontFamily : 'Georgia', fontSize: 24, fill : 0xff1010, align : 'right',  webkitTextStroke: 1});
+            treasure = new PIXI.Text(chestContainer.treasure,{fontFamily : 'Georgia', fontSize: 40, fill : 0xa98733, align : 'right'});
         }
-        treasure.x = chestContainer.closed.x;
-        treasure.y = chestContainer.closed.y;
+        treasure.anchor = 0.5,0.5;
         chestContainer.addChild(treasure);
     }
 
     export function endGame(endCondition){
-
-
-
-
-        console.log(endCondition);
         if(endCondition == "Finished")
-            endText = new PIXI.Text("You Win! <br> You earned " + gameMoney + " gold",{fontFamily : 'Georgia', fontSize: 72, fill : 0xff1010});
+            endText = new PIXI.Text("        You Win! \n You earned " + gameGoldCount + " gold",{fontFamily : 'Georgia', fontSize: 64, fill : 0xff1010});
         else if (endCondition == "Exited")
-            endText = new PIXI.Text("You earned " + gameMoney + " gold",{fontFamily : 'Georgia', fontSize: 72, fill : 0xff1010, });
+            endText = new PIXI.Text("You earned " + gameGoldCount + " gold",{fontFamily : 'Georgia', fontSize: 64, fill : 0xff1010});
         else
             endText = new PIXI.Text("You loose!",{fontFamily : 'Georgia', fontSize: 72, fill : 0xff1010});
 
         for (let i = 0; i < chests.length; i++) {
             chests[i].closed.interactive = false;
-            chests[i].closed.buttonMode = false;
             if(endCondition != chests[i]){
                 chests[i].removeChild(chests[i].open);
                 chests[i].addChild(chests[i].closed);
@@ -271,27 +253,24 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         endText.y = h/2;
         endText.anchor.x = 0.5;
         endText.anchor.y = 0.5;
-        app.stage.addChild(endText);
+        game.addChild(endText);
+        xButton.interactive = false;
 
-
-        totalMoneyCount += gameMoney;
-        totalMoneyText.text = "Total Money: " + totalMoneyCount;
-        gameMoney = 0;
+        totalGoldCount += gameGoldCount;
+        totalGoldText.text = "Total Gold: " + totalGoldCount;
+        gameGoldCount = 0;
         openChests = 0;
 
         animation = "endGameDelay";
-        clock = 100;
+        clock = 125;
     }
 
     export function reset(){
-        for (let i = 0; i < chests.length; i++) {
-            app.stage.removeChild(chests[i]);
-        }
+        while (game.children[0])
+            game.removeChild(game.children[0]);
 
-        app.stage.removeChild(endText);
-        app.stage.removeChild(xButton);
         pirateShip.interactive = true;
-        pirateShip.buttonMode = true;
+        background.filters = new PIXI.BlurFilter({strength: 0});
     }
 
     //-------------------------------------------------ANIMATIONS------------------------------------------------------------------
@@ -307,7 +286,7 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     export function animatePirateShip(time){
         let delta = time.deltaTime;
         elapsed += delta;
-        pirateShip.y = 260.0 + Math.cos(elapsed/100.0) * 10.0;
+        pirateShip.y = 255.0 + Math.cos(elapsed/100.0) * 10.0;
         pirateShip.rotation += Math.cos(elapsed/100.0) * 0.001;
         pirateShip.x += Math.cos(elapsed/100.0) * 0.1;
     }
@@ -315,9 +294,9 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
     export function animateCrab(time){
         let delta = time.deltaTime;
         elapsed += delta;
-        crab.x = 200.0 + Math.cos(elapsed/100.0) * 125.0
+        crab.x = 250.0 + Math.cos(elapsed/300.0) * 175.0
         crab.anchor.x = 0.5;
-        if(((elapsed/100.0)%(2*Math.PI))<Math.PI)
+        if(((elapsed/300.0)%(2*Math.PI))<Math.PI)
             crab.scale.x = crab.variableScale;
          else
             crab.scale.x = -crab.variableScale;
@@ -347,7 +326,8 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         addPirateShip();
         addBeach();
         addCrab();
-        addTotalMoneyText();
+        addTitleText();
+        addTotalGoldText();
 
         app.ticker.add((time) =>
         {

@@ -6,13 +6,13 @@
 </head>
 <body>
 <h1>Lucky Pirate</h1>
-Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests filled with <b id="gold">gold</b> ( <img src="images/gold.png" style="width:25px;height:20px;"> ) but avoid the <b id="skulls">skulls</b> ( <img src="images/skull.png" style="width:20px;height:20px;"> ) or loose your fortune!
+Welcome to Lucky Pirate, a pirate themed gambling game. Find the treasure chests filled with <b id="gold">gold</b> ( <img src="images/gold.png" style="width:25px;height:20px;"> ) but avoid the <b id="skulls">skulls</b> ( <img src="images/skull.png" style="width:20px;height:20px;"> ) or loose your fortune!
 <br>
 
 <div>
     <h2>How to Play</h2>
     Tap the pirate ship and spend 100 gold to begin. Within the treasure chests 250 Gold pieces can be found, tap a chest to open it winning the gold inside.
-    However two skulls are hidden amoungst the gold, if you tap a skull you lose the game and all the money you may have won.
+    However two skulls are hidden amongst the gold, if you tap a skull you lose the game and all the money you may have won.
     You can stop playing at any time by tapping the X button, keeping any gold you may have earned.
 </div>
 
@@ -35,8 +35,10 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
 
     let totalGoldText = null;
     let endText = null;
+
     const waves = [];
     const chests = [];
+
     let openChests = 0;
     let elapsed = 0.0;
     let clock = 0.0;
@@ -99,8 +101,7 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         const waveAssets = ['wave0','wave1','wave2','wave3'];
         for (let i = 0; i < waveCount; i++) {
             let wave = PIXI.Sprite.from(waveAssets[Math.floor(Math.random()*4)]);
-            wave.scale.x = 0.5;
-            wave.scale.y = 0.5;
+            wave.scale = 0.5,0.5;
             background.addChild(wave);
             wave.x = i*50;
             wave.anchor.x = 0.5;
@@ -129,8 +130,7 @@ Welcome to lucky pirate a pirate themed gambling game. Find the treasure chests 
         pirateShip.anchor.set(0.5);
         pirateShip.x = w/2;
         pirateShip.y = 260;
-        pirateShip.scale.x = 0.3;
-        pirateShip.scale.y = 0.3;
+        pirateShip.scale = 0.3,0.3;
         background.addChild(pirateShip);
         pirateShip.on('pointerdown',event => startGame(100));
     }
